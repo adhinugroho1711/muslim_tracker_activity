@@ -293,6 +293,69 @@ sudo apt update && sudo apt upgrade -y
 sudo certbot renew
 ```
 
+## Updating Application on VPS
+
+When you've pushed changes to the main branch, follow these steps to update your VPS:
+
+1. **SSH into your VPS**
+```bash
+ssh your_username@your_vps_ip
+```
+
+2. **Navigate to Application Directory**
+```bash
+cd /var/www/tracker_muslim/muslim_tracker_activity
+```
+
+3. **Pull Latest Changes**
+```bash
+git pull origin main
+```
+
+4. **Install Any New Dependencies**
+```bash
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+5. **Apply Database Migrations** (if any)
+```bash
+python reset_db.py  # Only if database schema has changed
+```
+
+6. **Restart Application Services**
+```bash
+sudo systemctl restart tracker_muslim  # Restart Gunicorn service
+sudo systemctl restart nginx           # Restart Nginx if needed
+```
+
+7. **Verify Application Status**
+```bash
+sudo systemctl status tracker_muslim   # Check if service is running
+sudo journalctl -u tracker_muslim      # Check logs for any errors
+```
+
+### Troubleshooting Update Issues
+
+If you encounter issues after updating:
+
+1. **Check Logs**
+```bash
+sudo journalctl -u tracker_muslim -n 50 --no-pager  # Last 50 log entries
+```
+
+2. **Verify File Permissions**
+```bash
+sudo chown -R www-data:www-data /var/www/tracker_muslim
+sudo chmod -R 755 /var/www/tracker_muslim
+```
+
+3. **Rollback if Needed**
+```bash
+git reset --hard HEAD@{1}  # Revert to previous commit
+sudo systemctl restart tracker_muslim
+```
+
 ## Configuration
 
 ### Environment Variables

@@ -518,6 +518,11 @@ def edit_user(user_id):
         user.student_number = data.get('student_number', user.student_number)
         user.class_name = data.get('class_name', user.class_name)
         
+        # Handle password change if provided
+        new_password = data.get('password')
+        if new_password and new_password.strip():
+            user.set_password(new_password)
+        
         db.session.commit()
         return jsonify({'status': 'success'})
     except Exception as e:

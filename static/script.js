@@ -195,6 +195,38 @@ document.addEventListener('DOMContentLoaded', function() {
         yearInput.value = currentYear;
     }
 
+    // Handle numeric inputs
+    document.querySelectorAll('.numeric-input').forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Remove any non-numeric characters
+            let value = this.value.replace(/[^0-9]/g, '');
+            
+            // Convert to number and ensure it's within bounds
+            value = parseInt(value) || 0;
+            
+            // Check max value based on activity
+            const cell = this.closest('.clickable-cell');
+            const activity = cell.dataset.activity;
+            const maxValue = activity === 'Rowatib' ? 12 : 999;
+            
+            // Ensure value is within bounds
+            value = Math.min(Math.max(0, value), maxValue);
+            
+            // Update input value
+            this.value = value;
+        });
+
+        // Prevent keyboard events from propagating to parent
+        input.addEventListener('keydown', function(e) {
+            e.stopPropagation();
+        });
+
+        // Select all text when focused
+        input.addEventListener('focus', function() {
+            this.select();
+        });
+    });
+
     // Set current month and year
     const script = document.querySelector('script[data-current-month]');
     if (script) {

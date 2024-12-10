@@ -158,7 +158,7 @@
                                 <td>Rowatib</td>
                                 {% for i in range(1, 32) %}
                                 <td class="p-2 text-center clickable-cell" data-activity="Rowatib" data-date="{{ i }}" data-numeric="true">
-                                    <input type="number" min="0" max="12" value="0" class="form-control-sm" onclick="event.stopPropagation();" style="width: 100%;">
+                                    <input type="number" min="0" max="12" value="0" class="form-control-sm numeric-input" onclick="event.stopPropagation();" style="width: 100%;" inputmode="numeric" pattern="[0-9]*">
                                 </td>
                                 {% endfor %}
                             </tr>
@@ -183,7 +183,7 @@
                                 </td>
                                 {% for i in range(1, 32) %}
                                 <td class="p-2 text-center clickable-cell" data-activity="Tilawah Qur'an" data-date="{{ i }}" data-numeric="true">
-                                    <input type="number" min="0" value="0" class="form-control-sm" onclick="event.stopPropagation();" style="width: 100%;">
+                                    <input type="number" min="0" value="0" class="form-control-sm numeric-input" onclick="event.stopPropagation();" style="width: 100%;" inputmode="numeric" pattern="[0-9]*">
                                 </td>
                                 {% endfor %}
                             </tr>

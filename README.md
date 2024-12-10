@@ -356,6 +356,85 @@ git reset --hard HEAD@{1}  # Revert to previous commit
 sudo systemctl restart tracker_muslim
 ```
 
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection**
+   - Verify PostgreSQL is running
+   - Check database credentials in .env
+   - Ensure database exists
+
+2. **Login Issues**
+   - Clear browser cache
+   - Reset password if forgotten
+   - Contact admin for account issues
+
+3. **Data Not Saving**
+   - Check internet connection
+   - Verify user session is active
+   - Try refreshing the page
+
+### PostgreSQL Authentication
+
+If you encounter the error "password authentication failed for user postgres", follow these steps:
+
+1. **Switch to PostgreSQL User**
+```bash
+sudo -i -u postgres
+psql
+```
+
+2. **Set New Password**
+```sql
+ALTER USER postgres WITH PASSWORD 'your_secure_password';
+\q
+exit
+```
+
+3. **Update Authentication Method**
+```bash
+sudo nano /etc/postgresql/*/main/pg_hba.conf
+```
+
+Change this line:
+```
+local   all             postgres                                peer
+```
+To:
+```
+local   all             postgres                                md5
+```
+
+4. **Restart PostgreSQL**
+```bash
+sudo systemctl restart postgresql
+```
+
+5. **Update Environment File**
+```bash
+sudo nano .env
+```
+
+Update these lines:
+```env
+DB_USER=postgres
+DB_PASSWORD=your_secure_password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=tracker_muslim
+```
+
+6. **Test Connection**
+```bash
+psql -U postgres -h localhost -d tracker_muslim
+```
+
+7. **Verify Application**
+```bash
+python app.py
+```
+
 ## Configuration
 
 ### Environment Variables
@@ -513,25 +592,6 @@ The dashboard provides multiple views to help you track your activities:
 - Use month/year selectors to navigate to different time periods
 - All charts and statistics update automatically when filters change
 - Data is cached for better performance
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection**
-   - Verify PostgreSQL is running
-   - Check database credentials in .env
-   - Ensure database exists
-
-2. **Login Issues**
-   - Clear browser cache
-   - Reset password if forgotten
-   - Contact admin for account issues
-
-3. **Data Not Saving**
-   - Check internet connection
-   - Verify user session is active
-   - Try refreshing the page
 
 ## Contributing
 

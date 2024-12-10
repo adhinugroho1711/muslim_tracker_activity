@@ -1,0 +1,377 @@
+:root {
+    --primary-color: #2C5F2D;
+    --secondary-color: #97BC62;
+    --accent-color: #89B5AF;
+    --light-color: #FCF9F3;
+    --dark-color: #234624;
+}
+
+/* CSS Reset for consistent rendering */
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Cross-browser smooth scrolling */
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-color: var(--light-color);
+    font-family: 'Roboto', sans-serif;
+    background-image: url('https://www.transparenttextures.com/patterns/arabesque.png');
+}
+
+.container {
+    max-width: 1200px;
+}
+
+.card {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: var(--light-color);
+    border-radius: 15px 15px 0 0 !important;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://www.transparenttextures.com/patterns/diamond-upholstery.png');
+    opacity: 0.1;
+}
+
+.card-header h2 {
+    font-family: 'Scheherazade New', serif;
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.card-header h3 {
+    font-size: 1.5rem;
+    opacity: 0.9;
+    position: relative;
+}
+
+.card-body {
+    padding: 2rem;
+}
+
+.form-label {
+    color: var(--dark-color);
+    font-weight: 500;
+}
+
+.form-control, .form-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 2px solid var(--secondary-color);
+    border-radius: 4px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 95, 45, 0.25);
+}
+
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid var(--secondary-color);
+}
+
+.table th {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+    padding: 1rem;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.table td {
+    text-align: center;
+    vertical-align: middle;
+    padding: 0 !important;
+    border: 1px solid var(--secondary-color);
+    position: relative;
+    background-clip: padding-box;
+}
+
+.activity-cell {
+    width: 100%;
+    height: 40px;
+    cursor: pointer;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-transition: background-color 0.2s ease;
+    -moz-transition: background-color 0.2s ease;
+    -o-transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.activity-cell:hover {
+    background-color: #f8f9fa;
+}
+
+.activity-cell.checked {
+    background-color: #e8f5e9;
+}
+
+.activity-cell.checked::after {
+    content: '✓';
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.activity-cell[data-activity="Rowatib"].checked::after,
+.activity-cell[data-activity="Tilawah Qur'an"].checked::after {
+    content: none;
+}
+
+td {
+    padding: 0 !important;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.fw-bold {
+    color: var(--dark-color);
+}
+
+/* Islamic decorative elements */
+.card::before {
+    content: '☪';
+    position: absolute;
+    top: -20px;
+    right: 20px;
+    font-size: 40px;
+    color: var(--primary-color);
+    opacity: 0.1;
+    transform: rotate(45deg);
+}
+
+.islamic-pattern {
+    background-image: url('path-to-your-pattern.png');
+    background-size: cover;
+    opacity: 0.1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .container {
+        padding: 0;
+        margin: 0;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .card {
+        border-radius: 0;
+        margin: 0;
+    }
+    
+    .card-body {
+        padding: 10px;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+    
+    .table th {
+        padding: 4px !important;
+        font-size: 11px;
+    }
+    
+    .activity-cell {
+        height: 25px;
+        font-size: 11px;
+    }
+    
+    .card-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .card-header h3 {
+        font-size: 1rem;
+    }
+    
+    /* Make the table scroll horizontally */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Fixed columns for mobile */
+    .table thead th:nth-child(1),
+    .table thead th:nth-child(2),
+    .table tbody td:nth-child(1),
+    .table tbody td:nth-child(2) {
+        position: -webkit-sticky;
+        position: sticky;
+        left: 0;
+        background-color: #fff;
+        z-index: 1;
+    }
+    
+    .table tbody td:nth-child(2) {
+        left: 80px;
+    }
+    
+    /* Adjust column widths */
+    .table td:first-child {
+        min-width: 80px;
+        max-width: 80px;
+    }
+    
+    .table td:not(:first-child):not(:nth-child(2)),
+    .table th:not(:first-child):not(:nth-child(2)) {
+        min-width: 35px;
+        max-width: 35px;
+    }
+    
+    /* Make form inputs full width on mobile */
+    .form-control, .form-select {
+        width: 100%;
+    }
+    
+    /* Adjust button spacing */
+    .row.mb-4 {
+        margin: 10px 0;
+    }
+    
+    .btn {
+        padding: 8px;
+        font-size: 14px;
+    }
+    
+    /* Adjust spacing between form groups */
+    .mb-3 {
+        margin-bottom: 10px !important;
+    }
+    
+    /* Make icons smaller on mobile */
+    .fas {
+        font-size: 1rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .container {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table th, .table td {
+        padding: 4px !important;
+        font-size: 10px;
+    }
+    
+    .activity-cell {
+        height: auto;
+        page-break-inside: avoid;
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* Safari-specific fixes */
+@supports (-webkit-touch-callout: none) {
+    .activity-cell {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Firefox-specific fixes */
+@-moz-document url-prefix() {
+    .table-responsive {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+    
+    .activity-cell {
+        -moz-user-select: none;
+    }
+}
+
+/* Edge-specific fixes */
+@supports (-ms-ime-align: auto) {
+    .table-responsive {
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+    }
+    
+    .activity-cell {
+        -ms-touch-action: manipulation;
+    }
+}

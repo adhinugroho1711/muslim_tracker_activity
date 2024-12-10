@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .clickable-cell {
+        cursor: pointer;
+        transition: background-color 0.2s;
+        min-width: 40px;
+        min-height: 40px;
+    }
+    
+    .clickable-cell:hover {
+        background-color: #e9ecef;
+    }
+    
+    .clickable-cell.table-success {
+        background-color: #d4edda !important;
+    }
+    
+    .clickable-cell.table-success:hover {
+        background-color: #c3e6cb !important;
+    }
+    
+    .clickable-cell input {
+        width: 100%;
+        min-width: 40px;
+        text-align: center;
+    }
+</style>
+<div class="container mt-4 mb-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card">
+        <div class="card-header text-center">
+            <i class="fas fa-moon mb-3" style="font-size: 2rem;"></i>
+            <h2>SEKOLAH KEPRIBADIAN MUSLIMAH</h2>
+            <h3>MUTABA'AH YAUMIYAH</h3>
+            <div class="islamic-pattern-top"></div>
+        </div>
+        <div class="card-body">
+            <form id="studentForm">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <input type="hidden" id="nama" value="{{ current_user.full_name }}">
+                        <input type="hidden" id="nomorInduk" value="{{ current_user.student_number }}">
+                        <input type="hidden" id="kelas" value="{{ current_user.class_name }}">
+                        <div class="mb-3">
+                            <label for="bulan" class="form-label">Bulan</label>
+                            <select class="form-select" id="bulan" required>
+                                <option value="">Pilih Bulan</option>
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tahun" class="form-label">Tahun</label>
+                            <input type="number" class="form-control" id="tahun" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end mt-3">
+                    <button type="button" class="btn btn-primary" id="printButton">
+                        <i class="fas fa-print"></i> Print Report
+                    </button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th colspan="2" class="bg-primary">AMALAN</th>
+                                <th colspan="31" class="bg-primary">TANGGAL</th>
+                            </tr>
+                            <tr>
+                                <th colspan="2"></th>
+                                {% for i in range(1, 32) %}
+                                <th>{{ i }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Sholat Wajib -->
+                            <tr>
+                                <td rowspan="5" class="align-middle fw-bold bg-light">
+                                    <i class="fas fa-pray mb-2"></i><br>
+                                    Sholat Wajib
+                                </td>
+                                <td>Subuh</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Subuh" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Dzuhur</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Dzuhur" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Ashar</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Ashar" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Maghrib</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Maghrib" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Isya</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Isya" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Sholat Sunnah -->
+                            <tr>
+                                <td rowspan="3" class="align-middle fw-bold bg-light">
+                                    <i class="fas fa-kaaba mb-2"></i><br>
+                                    Sholat Sunnah
+                                </td>
+                                <td>Rowatib</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Rowatib" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Qiyamulail</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Qiyamulail" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Dhuha</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Dhuha" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Tilawah Qur'an -->
+                            <tr>
+                                <td colspan="2" class="fw-bold bg-light">
+                                    <i class="fas fa-book-quran mb-2"></i><br>
+                                    Tilawah Qur'an
+                                </td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Tilawah Qur'an" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Puasa -->
+                            <tr>
+                                <td colspan="2" class="fw-bold bg-light">
+                                    <i class="fas fa-star-and-crescent mb-2"></i><br>
+                                    Puasa
+                                </td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Puasa" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Al-Ma'tsurat -->
+                            <tr>
+                                <td rowspan="2" class="align-middle fw-bold bg-light">
+                                    <i class="fas fa-book mb-2"></i><br>
+                                    Al-Ma'tsurat
+                                </td>
+                                <td>Pagi</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Al-Ma'tsurat Pagi" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Sore</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Al-Ma'tsurat Sore" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Wirid Qur'an -->
+                            <tr>
+                                <td rowspan="7" class="align-middle fw-bold bg-light">
+                                    <i class="fas fa-scroll mb-2"></i><br>
+                                    Wirid Qur'an
+                                </td>
+                                <td>Ar Rahman</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Ar Rahman" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Al Waqiah</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Al Waqiah" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Ad Dukhan</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Ad Dukhan" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>As Sajadah</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="As Sajadah" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Al Mulk</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Al Mulk" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Yaasin</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Yaasin" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                <td>Al Kahfi</td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Al Kahfi" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+
+                            <!-- Olahraga -->
+                            <tr>
+                                <td colspan="2" class="fw-bold bg-light">
+                                    <i class="fas fa-running mb-2"></i><br>
+                                    Olahraga
+                                </td>
+                                {% for i in range(1, 32) %}
+                                <td class="p-2 text-center clickable-cell" data-activity="Olahraga" data-date="{{ i }}"></td>
+                                {% endfor %}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='script.js') }}" data-current-month="{{ current_month }}" data-current-year="{{ current_year }}"></script>
+{% endblock %}

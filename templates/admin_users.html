@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>User Management</h2>
+        <div>
+            <button id="generateDummyData" class="btn btn-secondary me-2">
+                <i class="fas fa-database me-2"></i>Generate Dummy Data
+            </button>
+            <button id="resetActivitiesTable" class="btn btn-danger me-2">
+                <i class="fas fa-trash me-2"></i>Reset Activities
+            </button>
+            <a href="{{ url_for('create_user') }}" class="btn btn-success">
+                <i class="fas fa-user-plus me-2"></i>Create New User
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Student Number</th>
+                            <th>Class</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.full_name }}</td>
+                            <td>{{ user.student_number }}</td>
+                            <td>{{ user.class_name }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if user.is_admin else 'secondary' }}">
+                                    {{ 'Admin' if user.is_admin else 'User' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                                    {{ 'Active' if user.is_active else 'Inactive' }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary edit-user" data-user-id="{{ user.id }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% if not user.is_admin %}
+                                <button class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }} toggle-status"
+                                        data-user-id="{{ user.id }}"
+                                        data-current-status="{{ user.is_active }}">
+                                    <i class="fas fa-{{ 'ban' if user.is_active else 'check' }}"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <div class="mb-3">
+                        <label for="edit_full_name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="edit_full_name" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_student_number" class="form-label">Student Number</label>
+                        <input type="text" class="form-control" id="edit_student_number" name="student_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_class_name" class="form-label">Class</label>
+                        <input type="text" class="form-control" id="edit_class_name" name="class_name" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveUserChanges">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize variables
+    let currentUserId = null;
+    const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    
+    // Generate Dummy Data button click
+    document.getElementById('generateDummyData').addEventListener('click', function() {
+        if (confirm('Are you sure you want to generate dummy data? This will add sample activities for testing.')) {
+            fetch('/generate-dummy-data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // After successful generation, reload the page to refresh data
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+        }
+    });
+
+    // Reset Activities Table button click
+    document.getElementById('resetActivitiesTable').addEventListener('click', function() {
+        if (confirm('WARNING: This will delete ALL activity data. Are you sure you want to continue?')) {
+            fetch('/reset-activities-table')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        // After successful reset, reload the page to refresh data
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+        }
+    });
+    
+    // Edit user button click
+    document.querySelectorAll('.edit-user').forEach(button => {
+        button.addEventListener('click', function() {
+            currentUserId = this.dataset.userId;
+            fetch(`/admin/users/${currentUserId}`)
+                .then(response => response.json())
+                .then(user => {
+                    document.getElementById('edit_full_name').value = user.full_name;
+                    document.getElementById('edit_student_number').value = user.student_number;
+                    document.getElementById('edit_class_name').value = user.class_name;
+                    editModal.show();
+                });
+        });
+    });
+    
+    // Save changes button click
+    document.getElementById('saveUserChanges').addEventListener('click', function() {
+        const formData = {
+            full_name: document.getElementById('edit_full_name').value,
+            student_number: document.getElementById('edit_student_number').value,
+            class_name: document.getElementById('edit_class_name').value
+        };
+        
+        fetch(`/admin/users/${currentUserId}/edit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                editModal.hide();
+                location.reload();
+            } else {
+                alert('Error updating user: ' + data.message);
+            }
+        });
+    });
+    
+    // Toggle user status
+    document.querySelectorAll('.toggle-status').forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const currentStatus = this.dataset.currentStatus === 'True';
+            
+            if (confirm(`Are you sure you want to ${currentStatus ? 'disable' : 'enable'} this user?`)) {
+                fetch(`/admin/users/${userId}/toggle`, {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

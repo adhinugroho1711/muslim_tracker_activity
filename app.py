@@ -51,6 +51,7 @@ class Activity(db.Model):
     name = db.Column(db.String(100), nullable=False, index=True)
     date = db.Column(db.Date, nullable=False, index=True)
     completed = db.Column(db.Boolean, default=False, index=True)
+    value = db.Column(db.Integer, nullable=True)  # For numeric activities like Rowatib and Tilawah
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
     
@@ -66,6 +67,7 @@ class Activity(db.Model):
             'name': self.name,
             'date': self.date.strftime('%Y-%m-%d') if self.date else None,
             'completed': self.completed,
+            'value': self.value,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
             'updated_at': self.updated_at.strftime('%Y-%m-%d %H:%M:%S') if self.updated_at else None
         }
@@ -197,8 +199,25 @@ def dashboard():
     current_month = current_date.strftime('%B')  # Full month name
     current_year = current_date.year
     
+    # Convert English month name to Indonesian
+    month_mapping = {
+        'January': 'Januari',
+        'February': 'Februari',
+        'March': 'Maret',
+        'April': 'April',
+        'May': 'Mei',
+        'June': 'Juni',
+        'July': 'Juli',
+        'August': 'Agustus',
+        'September': 'September',
+        'October': 'Oktober',
+        'November': 'November',
+        'December': 'Desember'
+    }
+    current_month_indo = month_mapping.get(current_month, current_month)
+    
     return render_template('dashboard.html', 
-                         current_month=current_month,
+                         current_month=current_month_indo,
                          current_year=current_year)
 
 @app.route('/api/dashboard/stats')
@@ -366,6 +385,7 @@ def handle_stats():
                 name = activity_data.get('name')
                 date_str = activity_data.get('date')
                 completed = activity_data.get('completed', False)
+                value = activity_data.get('value')  # Get the numeric value if present
                 
                 if not name or not date_str:
                     return jsonify({
@@ -391,6 +411,7 @@ def handle_stats():
                 if existing_activity:
                     # Update existing activity
                     existing_activity.completed = completed
+                    existing_activity.value = value  # Update the value
                     existing_activity.updated_at = datetime.now()
                     results.append(existing_activity.to_dict())
                 else:
@@ -399,7 +420,8 @@ def handle_stats():
                         user_id=current_user.id,
                         name=name,
                         date=activity_date,
-                        completed=completed
+                        completed=completed,
+                        value=value  # Set the value for new activities
                     )
                     db.session.add(activity)
                     results.append(activity.to_dict())

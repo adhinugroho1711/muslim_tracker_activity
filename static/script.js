@@ -94,28 +94,38 @@ async function handleCellClick(event) {
 
     const activity = cell.dataset.activity;
     const date = cell.dataset.date;
+    const isNumeric = isNumericActivity(activity);
     
     if (!activity || !date) {
         console.log('Missing activity or date:', { activity, date });
         return;
     }
 
-    console.log('Handling click for:', { activity, date });
+    console.log('Handling click for:', { activity, date, isNumeric });
 
-    // Toggle cell state
-    const isChecked = !cell.classList.contains('table-success');
-    
-    // Update visual state immediately
-    if (isChecked) {
-        cell.classList.add('table-success');
-        const checkmark = document.createTextNode('✓');
-        cell.textContent = '✓';
+    let value = null;
+    let isChecked = false;
+
+    if (isNumeric) {
+        // For numeric inputs, get the value from the input field
+        const input = cell.querySelector('input[type="number"]');
+        if (input) {
+            value = input.value ? parseInt(input.value) : 0;
+            isChecked = value > 0;
+        }
     } else {
-        cell.classList.remove('table-success');
-        cell.textContent = '';
+        // For checkbox-style cells, toggle the state
+        isChecked = !cell.classList.contains('table-success');
+        if (isChecked) {
+            cell.classList.add('table-success');
+            cell.textContent = '✓';
+        } else {
+            cell.classList.remove('table-success');
+            cell.textContent = '';
+        }
     }
     
-    console.log('Cell toggled:', { isChecked });
+    console.log('Activity state:', { isChecked, value });
 
     try {
         // Get current month and year
@@ -133,7 +143,7 @@ async function handleCellClick(event) {
                 name: activity,
                 date: formattedDate,
                 completed: isChecked,
-                value: null
+                value: value
             }]
         };
         
@@ -161,14 +171,6 @@ async function handleCellClick(event) {
         }
     } catch (error) {
         console.error('Error saving activity:', error);
-        // Revert the visual state if save failed
-        if (isChecked) {
-            cell.classList.remove('table-success');
-            cell.textContent = '';
-        } else {
-            cell.classList.add('table-success');
-            cell.textContent = '✓';
-        }
         showError('Error saving activity: ' + error.message);
     }
 }
@@ -177,6 +179,22 @@ async function handleCellClick(event) {
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM fully loaded');
     
+    // Set current month and year
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const currentDate = new Date();
+    const currentMonth = monthNames[currentDate.getMonth()];
+    const currentYear = currentDate.getFullYear();
+
+    // Get month and year elements
+    const monthSelect = document.getElementById('bulan');
+    const yearInput = document.getElementById('tahun');
+
+    if (monthSelect && yearInput) {
+        // Set current month and year
+        monthSelect.value = currentMonth;
+        yearInput.value = currentYear;
+    }
+
     // Set current month and year
     const script = document.querySelector('script[data-current-month]');
     if (script) {
@@ -187,10 +205,24 @@ document.addEventListener('DOMContentLoaded', function() {
         if (currentYear) document.getElementById('tahun').value = currentYear;
     }
 
-    // Add click handlers to all cells
-    document.querySelectorAll('.clickable-cell').forEach(cell => {
+    // Add input handlers to numeric cells
+    document.querySelectorAll('.clickable-cell[data-numeric="true"] input[type="number"]').forEach(input => {
+        input.addEventListener('change', function(event) {
+            event.stopPropagation();
+            const cell = event.target.closest('.clickable-cell');
+            if (cell) {
+                handleCellClick.call(cell, { 
+                    preventDefault: () => {},
+                    stopPropagation: () => {},
+                    currentTarget: cell 
+                });
+            }
+        });
+    });
+
+    // Add click handlers to non-numeric cells
+    document.querySelectorAll('.clickable-cell:not([data-numeric="true"])').forEach(cell => {
         cell.addEventListener('click', handleCellClick);
-        console.log('Added click handler to cell:', cell.dataset.activity, cell.dataset.date);
     });
 
     // Add change handlers for month/year
@@ -205,14 +237,14 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadActivities() {
     const bulan = document.getElementById('bulan').value;
     const tahun = document.getElementById('tahun').value;
+    const month = getMonthNumber(bulan);
     
-    if (!bulan || !tahun) {
-        console.log('Month or year not selected');
+    if (!bulan || !tahun || !month) {
+        console.error('Missing month or year');
         return;
     }
-
+    
     try {
-        const month = getMonthNumber(bulan);
         const startDate = new Date(tahun, month - 1, 1);
         const endDate = new Date(tahun, month, 0);
         
@@ -226,23 +258,40 @@ async function loadActivities() {
         console.log('Loaded activities:', data);
         
         if (data.success) {
-            // Clear all cells first
+            // Reset all cells first
             document.querySelectorAll('.clickable-cell').forEach(cell => {
-                cell.classList.remove('table-success');
-                cell.textContent = '';
+                const isNumeric = isNumericActivity(cell.dataset.activity);
+                if (isNumeric) {
+                    const input = cell.querySelector('input[type="number"]');
+                    if (input) {
+                        input.value = '0';
+                    }
+                } else {
+                    cell.classList.remove('table-success');
+                    cell.textContent = '';
+                }
             });
             
-            // Update cells with loaded data
+            // Update cells with activity data
             data.activities.forEach(activity => {
                 const date = new Date(activity.date);
                 const cell = document.querySelector(`.clickable-cell[data-activity="${activity.name}"][data-date="${date.getDate()}"]`);
-                if (cell && activity.completed) {
-                    cell.classList.add('table-success');
-                    cell.textContent = '✓';
+                
+                if (cell) {
+                    const isNumeric = isNumericActivity(activity.name);
+                    if (isNumeric) {
+                        const input = cell.querySelector('input[type="number"]');
+                        if (input && activity.value !== null) {
+                            input.value = activity.value;
+                        }
+                    } else if (activity.completed) {
+                        cell.classList.add('table-success');
+                        cell.textContent = '✓';
+                    }
                 }
             });
         } else {
-            showError('Failed to load activities: ' + data.message);
+            throw new Error(data.message || 'Failed to load activities');
         }
     } catch (error) {
         console.error('Error loading activities:', error);
@@ -353,251 +402,260 @@ function getDaysInMonth(month, year) {
 
 // Print report function
 function printReport() {
-    const printWindow = window.open('', '_blank');
-    const studentName = document.getElementById('nama').value;
-    const studentNumber = document.getElementById('nomorInduk').value;
-    const studentClass = document.getElementById('kelas').value;
-    const month = document.getElementById('bulan').value;
-    const year = document.getElementById('tahun').value;
+    try {
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Pop-up window was blocked. Please allow pop-ups for this site.');
+            return;
+        }
 
-    // Create print content
-    const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Mutaba'ah Report - ${studentName}</title>
-            <style>
-                @page {
-                    size: A4;
-                    margin: 1cm;
-                }
-                body {
-                    font-family: Arial, sans-serif;
-                    margin: 0;
-                    padding: 20px;
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .student-info {
-                    display: grid;
-                    grid-template-columns: auto 1fr auto 1fr;
-                    gap: 10px;
-                    margin-bottom: 20px;
-                }
-                .student-info div {
-                    display: flex;
-                    align-items: center;
-                }
-                .student-info label {
-                    margin-right: 10px;
-                }
-                .student-info .value {
-                    border-bottom: 1px solid #000;
-                    padding: 0 10px;
-                    min-width: 200px;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 20px;
-                }
-                th, td {
-                    border: 1px solid #000;
-                    padding: 8px;
-                    text-align: center;
-                }
-                th {
-                    background-color: #f5f5f5;
-                }
-                .activity-header {
-                    font-weight: bold;
-                    background-color: #f5f5f5;
-                }
-                @media print {
-                    body { padding: 0; }
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h2 style="margin: 0;">SEKOLAH KEPRIBADIAN MUSLIMAH</h2>
-                <h3 style="margin: 10px 0;">MUTABA'AH YAUMIYAH</h3>
-            </div>
+        const studentName = document.getElementById('nama').value;
+        const studentNumber = document.getElementById('nomorInduk').value;
+        const className = document.getElementById('kelas').value;
+        const month = document.getElementById('bulan').value;
+        const year = document.getElementById('tahun').value;
+
+        // Get all activities data
+        const activities = {};
+        const cells = document.querySelectorAll('.clickable-cell');
+        cells.forEach(cell => {
+            const activity = cell.dataset.activity;
+            const date = cell.dataset.date;
+            const isNumeric = isNumericActivity(activity);
             
-            <div class="student-info">
-                <div><label>Nama</label></div>
-                <div class="value">${studentName}</div>
-                <div><label>Bulan</label></div>
-                <div class="value">${month}</div>
-                
-                <div><label>Nomor Induk</label></div>
-                <div class="value">${studentNumber}</div>
-                <div><label>Tahun</label></div>
-                <div class="value">${year}</div>
-                
-                <div><label>Kelas</label></div>
-                <div class="value">${studentClass}</div>
-            </div>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th colspan="2">AMALAN</th>
-                        <th colspan="31">TANGGAL</th>
-                    </tr>
-                    <tr>
-                        <th colspan="2"></th>
-                        ${Array.from({length: 31}, (_, i) => `<th>${i + 1}</th>`).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${generatePrintableActivityRows()}
-                </tbody>
-            </table>
-        </body>
-        </html>
-    `;
-
-    printWindow.document.write(printContent);
-    printWindow.document.close();
-    printWindow.print();
-}
-
-function createActivityCells() {
-    const activityCells = document.querySelectorAll('.activity-cell');
-    
-    // Add click event listeners to all activity cells
-    activityCells.forEach(cell => {
-        // Remove existing click listeners to prevent duplicates
-        cell.removeEventListener('click', handleCellClick);
-        // Add new click listener
-        cell.addEventListener('click', handleCellClick);
-        
-        // Initialize the cell with stored data
-        const activity = cell.dataset.activity;
-        const date = parseInt(cell.dataset.date);
-        
-        // Add cursor pointer style
-        cell.style.cursor = 'pointer';
-        cell.style.width = '30px';
-        cell.style.height = '30px';
-        
-        // Set minimum dimensions
-        cell.style.minWidth = '30px';
-        cell.style.minHeight = '30px';
-        
-        // Center content
-        cell.style.display = 'flex';
-        cell.style.alignItems = 'center';
-        cell.style.justifyContent = 'center';
-    });
-}
-
-function updateDaysInMonth() {
-    const month = document.getElementById('bulan').value;
-    const year = parseInt(document.getElementById('tahun').value);
-    
-    if (!month || !year) return;
-
-    const daysInMonth = getDaysInMonth(month, year);
-    
-    // Update header
-    const headerRow = document.querySelector('thead tr:nth-child(2)');
-    headerRow.innerHTML = '<th colspan="2"></th>';
-    for (let i = 1; i <= 31; i++) {
-        const th = document.createElement('th');
-        th.textContent = i;
-        if (i > daysInMonth) {
-            th.style.display = 'none';
-        } else {
-            th.style.display = '';
-        }
-        headerRow.appendChild(th);
-    }
-
-    // Update all activity rows
-    const activityCells = document.querySelectorAll('.activity-cell');
-    activityCells.forEach(cell => {
-        const date = parseInt(cell.dataset.date);
-        if (date > daysInMonth) {
-            cell.style.display = 'none';
-        } else {
-            cell.style.display = '';
-        }
-    });
-}
-
-function generatePrintableActivityRows() {
-    const activities = {
-        'Sholat Wajib': ['Subuh', 'Dzuhur', 'Ashar', 'Maghrib', 'Isya'],
-        'Sholat Sunnah': ['Rowatib', 'Qiyamulail', 'Dhuha'],
-        'Tilawah Qur\'an': [],
-        'Puasa': [],
-        'Al-Ma\'tsurat': ['Pagi', 'Sore'],
-        'Wirid Qur\'an': ['Ar Rahman', 'Al Waqiah', 'Ad Dukhan', 'As Sajadah', 'Al Mulk', 'Yaasin', 'Al Kahfi'],
-        'Olahraga': []
-    };
-
-    let html = '';
-    
-    for (const [category, subActivities] of Object.entries(activities)) {
-        if (subActivities.length > 0) {
-            // Category with sub-activities
-            html += `
-                <tr>
-                    <td rowspan="${subActivities.length}" class="activity-header">${category}</td>
-                    <td>${subActivities[0]}</td>
-                    ${generateActivityCells(subActivities[0])}
-                </tr>
-            `;
-            // Remaining sub-activities
-            for (let i = 1; i < subActivities.length; i++) {
-                html += `
-                    <tr>
-                        <td>${subActivities[i]}</td>
-                        ${generateActivityCells(subActivities[i])}
-                    </tr>
-                `;
+            if (!activities[activity]) {
+                activities[activity] = {};
             }
-        } else {
-            // Single activity without sub-activities
-            html += `
-                <tr>
-                    <td colspan="2" class="activity-header">${category}</td>
-                    ${generateActivityCells(category)}
-                </tr>
-            `;
-        }
+            
+            if (isNumeric) {
+                const input = cell.querySelector('input[type="number"]');
+                activities[activity][date] = input ? input.value : '0';
+            } else {
+                activities[activity][date] = cell.classList.contains('table-success') ? '✓' : '';
+            }
+        });
+
+        // Create print content
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Mutaba'ah Report - ${studentName}</title>
+                <style>
+                    @page {
+                        size: A4 landscape;
+                        margin: 1cm;
+                    }
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    .header {
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+                    .student-info {
+                        margin-bottom: 20px;
+                    }
+                    .student-info p {
+                        margin: 5px 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-bottom: 20px;
+                        font-size: 12px;
+                    }
+                    th, td {
+                        border: 1px solid #000;
+                        padding: 4px;
+                        text-align: center;
+                    }
+                    th {
+                        background-color: #f0f0f0;
+                    }
+                    .activity-group {
+                        text-align: left;
+                        font-weight: bold;
+                        background-color: #f0f0f0;
+                    }
+                    .activity-name {
+                        text-align: left;
+                        padding-left: 20px;
+                    }
+                    .legend {
+                        margin-top: 20px;
+                        font-size: 12px;
+                    }
+                    .legend p {
+                        margin: 5px 0;
+                    }
+                    @media print {
+                        .no-print {
+                            display: none;
+                        }
+                        body {
+                            -webkit-print-color-adjust: exact;
+                            print-color-adjust: exact;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2 style="margin: 0;">SEKOLAH KEPRIBADIAN MUSLIMAH</h2>
+                    <h3 style="margin: 10px 0;">MUTABA'AH YAUMIYAH</h3>
+                </div>
+                
+                <div class="student-info">
+                    <p><strong>Nama:</strong> ${studentName}</p>
+                    <p><strong>Nomor Induk:</strong> ${studentNumber}</p>
+                    <p><strong>Kelas:</strong> ${className}</p>
+                    <p><strong>Bulan:</strong> ${month} ${year}</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="2">Amalan</th>
+                            ${Array.from({length: 31}, (_, i) => `<th>${i + 1}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Sholat Wajib Group -->
+                        <tr>
+                            <td rowspan="5" class="activity-group">Sholat Wajib</td>
+                            <td class="activity-name">Subuh</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Subuh']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="activity-name">Dzuhur</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Dzuhur']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="activity-name">Ashar</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Ashar']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="activity-name">Maghrib</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Maghrib']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="activity-name">Isya</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Isya']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+
+                        <!-- Sholat Sunnah Group -->
+                        <tr>
+                            <td rowspan="3" class="activity-group">Sholat Sunnah</td>
+                            <td class="activity-name">Rowatib</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Rowatib']?.[i + 1] || '0'}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="activity-name">Qiyamulail</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Qiyamulail']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="activity-name">Dhuha</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Dhuha']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+
+                        <!-- Tilawah Group -->
+                        <tr>
+                            <td colspan="2" class="activity-group">Tilawah Qur'an</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Tilawah Qur\'an']?.[i + 1] || '0'}</td>`).join('')}
+                        </tr>
+
+                        <!-- Puasa -->
+                        <tr>
+                            <td colspan="2" class="activity-group">Puasa</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Puasa']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+
+                        <!-- Al-Ma'tsurat Group -->
+                        <tr>
+                            <td rowspan="2" class="activity-group">Al-Ma'tsurat</td>
+                            <td class="activity-name">Pagi</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Al-Ma\'tsurat Pagi']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+                        <tr>
+                            <td class="activity-name">Sore</td>
+                            ${Array.from({length: 31}, (_, i) => `<td>${activities['Al-Ma\'tsurat Sore']?.[i + 1] || ''}</td>`).join('')}
+                        </tr>
+                        <!-- Wirid Qur'an Group -->
+<tr>
+    <td rowspan="7" class="activity-group">Wirid Qur'an</td>
+    <td class="activity-name">Ar Rahman</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['Ar Rahman']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+<tr>
+    <td class="activity-name">Al Waqiah</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['Al Waqiah']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+<tr>
+    <td class="activity-name">Ad Dukhan</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['Ad Dukhan']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+<tr>
+    <td class="activity-name">As Sajadah</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['As Sajadah']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+<tr>
+    <td class="activity-name">Al Mulk</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['Al Mulk']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+<tr>
+    <td class="activity-name">Yaasin</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['Yaasin']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+<tr>
+    <td class="activity-name">Al Kahfi</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['Al Kahfi']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+
+<!-- Olahraga -->
+<tr>
+    <td colspan="2" class="activity-group">Olahraga</td>
+    ${Array.from({length: 31}, (_, i) => `<td>${activities['Olahraga']?.[i + 1] || ''}</td>`).join('')}
+</tr>
+                    </tbody>
+                </table>
+
+                <div class="legend">
+                    <p><strong>Keterangan:</strong></p>
+                    <p>✓ = Aktivitas telah dilakukan</p>
+                    <p>Rowatib = Jumlah rakaat sholat sunnah rowatib (0-12)</p>
+                    <p>Tilawah Qur'an = Jumlah halaman yang dibaca</p>
+                </div>
+
+                <div class="no-print" style="margin-top: 20px; text-align: center;">
+                    <button onclick="window.print();" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+                        Print Laporan
+                    </button>
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Write content to print window
+        printWindow.document.open();
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+    } catch (error) {
+        console.error('Error generating print report:', error);
+        alert('Terjadi kesalahan saat membuat laporan. Silakan coba lagi.');
     }
-    
-    return html;
 }
 
-function generateActivityCells(activity) {
-    let cells = '';
-    const daysInMonth = getDaysInMonth(
-        document.getElementById('bulan').value,
-        parseInt(document.getElementById('tahun').value)
-    );
-
-    for (let i = 1; i <= 31; i++) {
-        const cell = document.querySelector(`.activity-cell[data-activity="${activity}"][data-date="${i}"]`);
-        const isChecked = cell && cell.classList.contains('checked');
-        const isHidden = i > daysInMonth ? 'style="display: none;"' : '';
-        
-        if (isNumericActivity(activity)) {
-            const value = cell ? (cell.textContent || '0') : '0';
-            cells += `<td ${isHidden} class="${value > 0 ? 'checked-cell' : ''}">${value}</td>`;
-        } else {
-            cells += `<td ${isHidden} class="${isChecked ? 'checked-cell' : ''}">${isChecked ? '&#10004;' : ''}</td>`;
-        }
+// Add event listener for print button
+document.addEventListener('DOMContentLoaded', function() {
+    const printButton = document.getElementById('printButton');
+    if (printButton) {
+        printButton.addEventListener('click', printReport);
     }
-    
-    return cells;
-}
+});
 
 // Load data based on current page
 function loadData() {
@@ -777,21 +835,18 @@ function updateHeatmap(activities, viewType) {
     
     heatmapContainer.innerHTML = '';
     
-    // Create header row with day names
-    const headerRow = document.createElement('div');
-    headerRow.className = 'd-flex justify-content-between mb-2';
-    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
-        const dayLabel = document.createElement('div');
-        dayLabel.className = 'text-center fw-bold text-muted small';
-        dayLabel.style.width = '14.28%';
-        dayLabel.textContent = day;
-        headerRow.appendChild(dayLabel);
-    });
-    heatmapContainer.appendChild(headerRow);
+    // Create color scale
+    const getColor = (value) => {
+        if (value === 0) return '#ebedf0';
+        if (value < 25) return '#9be9a8';
+        if (value < 50) return '#40c463';
+        if (value < 75) return '#30a14e';
+        return '#216e39';
+    };
     
-    // Create calendar grid
-    const calendarGrid = document.createElement('div');
-    calendarGrid.className = 'activity-calendar';
+    // Create heatmap grid
+    const grid = document.createElement('div');
+    grid.className = 'activity-calendar';
     
     // Get date range
     const year = parseInt(document.getElementById('tahun').value);
@@ -800,11 +855,11 @@ function updateHeatmap(activities, viewType) {
     const firstDay = new Date(year, month - 1, 1).getDay();
     
     // Add empty cells for days before the first of the month
-    for (let i = 0; i < firstDay; i++) {
+    for (let i = 0; i <firstDay; i++) {
         const emptyDay = document.createElement('div');
         emptyDay.className = 'calendar-day';
         emptyDay.style.backgroundColor = '#f8f9fa';
-        calendarGrid.appendChild(emptyDay);
+        grid.appendChild(emptyDay);
     }
     
     // Add cells for each day of the month
@@ -842,10 +897,10 @@ function updateHeatmap(activities, viewType) {
         dayNumber.textContent = day;
         dayEl.appendChild(dayNumber);
         
-        calendarGrid.appendChild(dayEl);
+        grid.appendChild(dayEl);
     }
     
-    heatmapContainer.appendChild(calendarGrid);
+    heatmapContainer.appendChild(grid);
 }
 
 // Update summary cards
@@ -1033,15 +1088,17 @@ function updateStreakChart(streakData) {
     const data = Object.values(streakData);
     
     window.streakChart = new Chart(ctx, {
-        type: 'bar',
+        type: 'line',
         data: {
             labels: labels,
             datasets: [{
                 label: 'Current Streak (days)',
                 data: data,
-                backgroundColor: 'rgba(255, 159, 64, 0.2)',
-                borderColor: 'rgba(255, 159, 64, 1)',
-                borderWidth: 1
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
             }]
         },
         options: {
@@ -1049,7 +1106,10 @@ function updateStreakChart(streakData) {
             maintainAspectRatio: false,
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
                 }
             }
         }

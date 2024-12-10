@@ -84,6 +84,197 @@ cp .env.example .env
 python reset_db.py
 ```
 
+## VPS Deployment Guide
+
+### Prerequisites for VPS
+- Ubuntu Server 20.04 LTS or newer
+- Domain name pointing to your VPS IP
+- Root or sudo access to VPS
+
+### Server Setup
+
+1. **Update System**
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+2. **Install Required Packages**
+```bash
+sudo apt install -y python3-pip python3-venv nginx postgresql postgresql-contrib certbot python3-certbot-nginx
+```
+
+3. **Create Database**
+```bash
+sudo -u postgres psql
+CREATE DATABASE tracker_muslim;
+CREATE USER your_user WITH PASSWORD 'your_password';
+GRANT ALL PRIVILEGES ON DATABASE tracker_muslim TO your_user;
+\q
+```
+
+### Application Deployment
+
+1. **Create Application Directory**
+```bash
+sudo mkdir /var/www/tracker_muslim
+sudo chown $USER:$USER /var/www/tracker_muslim
+```
+
+2. **Clone Repository**
+```bash
+cd /var/www/tracker_muslim
+git clone https://github.com/your-username/manage_task.git .
+```
+
+3. **Setup Virtual Environment**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install gunicorn  # For production server
+```
+
+4. **Configure Environment**
+```bash
+cp .env.example .env
+nano .env
+```
+
+Update with production settings:
+```env
+FLASK_ENV=production
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_NAME=tracker_muslim
+SECRET_KEY=your-secure-secret-key
+```
+
+5. **Setup Gunicorn Service**
+```bash
+sudo nano /etc/systemd/system/tracker_muslim.service
+```
+
+Add the following:
+```ini
+[Unit]
+Description=Tracker Muslim Gunicorn Service
+After=network.target
+
+[Service]
+User=your_username
+Group=www-data
+WorkingDirectory=/var/www/tracker_muslim
+Environment="PATH=/var/www/tracker_muslim/venv/bin"
+ExecStart=/var/www/tracker_muslim/venv/bin/gunicorn --workers 3 --bind unix:tracker_muslim.sock -m 007 app:app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+6. **Configure Nginx**
+```bash
+sudo nano /etc/nginx/sites-available/tracker_muslim
+```
+
+Add the following:
+```nginx
+server {
+    server_name your-domain.com;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/var/www/tracker_muslim/tracker_muslim.sock;
+    }
+
+    location /static {
+        alias /var/www/tracker_muslim/static;
+    }
+}
+```
+
+7. **Enable Site & Setup SSL**
+```bash
+sudo ln -s /etc/nginx/sites-available/tracker_muslim /etc/nginx/sites-enabled
+sudo nginx -t
+sudo systemctl restart nginx
+sudo certbot --nginx -d your-domain.com
+```
+
+8. **Start Application**
+```bash
+sudo systemctl start tracker_muslim
+sudo systemctl enable tracker_muslim
+```
+
+### Git Setup and Updates
+
+1. **Initialize Git Repository (if not done)**
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+```
+
+2. **Add Remote Repository**
+```bash
+git remote add origin https://github.com/your-username/manage_task.git
+git branch -M main
+git push -u origin main
+```
+
+3. **Update Application**
+```bash
+cd /var/www/tracker_muslim
+git pull origin main
+source venv/bin/activate
+pip install -r requirements.txt
+sudo systemctl restart tracker_muslim
+```
+
+### Maintenance Commands
+
+- **View Application Logs**
+```bash
+sudo journalctl -u tracker_muslim
+```
+
+- **Check Service Status**
+```bash
+sudo systemctl status tracker_muslim
+```
+
+- **Restart Services**
+```bash
+sudo systemctl restart tracker_muslim
+sudo systemctl restart nginx
+```
+
+### Backup Database
+```bash
+pg_dump -U your_user tracker_muslim > backup_$(date +%Y%m%d).sql
+```
+
+### Security Recommendations
+
+1. **Configure Firewall**
+```bash
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 22
+sudo ufw enable
+```
+
+2. **Regular Updates**
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+3. **SSL Certificate Renewal**
+```bash
+sudo certbot renew
+```
+
 ## Configuration
 
 ### Environment Variables

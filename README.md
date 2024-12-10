@@ -58,8 +58,8 @@ A web application to help track daily Islamic activities, designed for both mobi
 
 1. **Clone Repository**
 ```bash
-git clone [your-repository-url]
-cd manage_task
+git clone https://github.com/adhinugroho1711/muslim_tracker_activity.git
+cd muslim_tracker_activity
 ```
 
 2. **Virtual Environment**
@@ -116,14 +116,14 @@ GRANT ALL PRIVILEGES ON DATABASE tracker_muslim TO your_user;
 
 1. **Create Application Directory**
 ```bash
-sudo mkdir /var/www/tracker_muslim
+sudo mkdir -p /var/www/tracker_muslim
 sudo chown $USER:$USER /var/www/tracker_muslim
 ```
 
 2. **Clone Repository**
 ```bash
 cd /var/www/tracker_muslim
-git clone https://github.com/your-username/manage_task.git .
+git clone https://github.com/adhinugroho1711/muslim_tracker_activity.git .
 ```
 
 3. **Setup Virtual Environment**
@@ -218,7 +218,7 @@ git commit -m "Initial commit"
 
 2. **Add Remote Repository**
 ```bash
-git remote add origin https://github.com/your-username/manage_task.git
+git remote add origin https://github.com/adhinugroho1711/muslim_tracker_activity.git
 git branch -M main
 git push -u origin main
 ```

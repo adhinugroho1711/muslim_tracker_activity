@@ -79,7 +79,25 @@ cp .env.example .env
 # Edit .env with your database credentials and settings
 ```
 
-5. **Database Initialization**
+5. **SSL Configuration (Optional)**
+For secure database connections, you can configure SSL in your `.env` file:
+```env
+# SSL Configuration
+SSL_MODE=verify-full  # Options: disable, allow, prefer, require, verify-ca, verify-full
+SSL_CERT=/path/to/client-cert.pem
+SSL_KEY=/path/to/client-key.pem
+SSL_ROOT_CERT=/path/to/server-ca.pem
+```
+
+SSL modes:
+- `disable`: Only try a non-SSL connection
+- `allow`: First try a non-SSL connection; if that fails, try an SSL connection
+- `prefer`: First try an SSL connection; if that fails, try a non-SSL connection
+- `require`: Only try an SSL connection, but don't verify CA
+- `verify-ca`: Only try an SSL connection, and verify that the certificate is from a trusted CA
+- `verify-full`: Only try an SSL connection, verify the CA and verify the server hostname matches certificate
+
+6. **Database Initialization**
 ```bash
 python reset_db.py
 ```

@@ -80,9 +80,168 @@ A web application to help track daily Islamic activities, designed for both mobi
    ```
 
 3. **Configure Services**
-   - Set up Gunicorn service
-   - Configure Nginx as reverse proxy
-   - Enable and start services
+
+### 1. Set up Gunicorn Service
+
+Create and configure the systemd service file for Gunicorn:
+
+```bash
+# Create service file
+sudo nano /etc/systemd/system/tracker_muslim.service
+```
+
+Add the following content:
+
+```ini
+[Unit]
+Description=Gunicorn instance to serve Muslim Tracker application
+After=network.target
+
+[Service]
+User=your_username
+Group=www-data
+WorkingDirectory=/var/www/tracker_muslim
+Environment="PATH=/var/www/tracker_muslim/venv/bin"
+ExecStart=/var/www/tracker_muslim/venv/bin/gunicorn \
+    --workers 2 \
+    --threads 2 \
+    --worker-class=gthread \
+    --worker-tmp-dir=/dev/shm \
+    --timeout 30 \
+    --keep-alive 2 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --bind unix:/var/www/tracker_muslim/run/tracker_muslim.sock \
+    -m 007 \
+    app:app
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start the service:
+```bash
+sudo systemctl enable tracker_muslim
+sudo systemctl start tracker_muslim
+```
+
+### 2. Configure Nginx as Reverse Proxy
+
+Create Nginx configuration:
+
+```bash
+# Create Nginx config
+sudo nano /etc/nginx/nginx.conf
+```
+
+Add the following configuration:
+
+```nginx
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 768;
+}
+
+http {
+    # Basic Settings
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    keepalive_timeout 65;
+    types_hash_max_size 2048;
+
+    # MIME Types
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # SSL Settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    # Logging Settings
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Gzip Settings
+    gzip on;
+
+    server {
+        listen 80;
+        server_name your_server_ip;
+
+        access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+
+        location / {
+            include proxy_params;
+            proxy_pass http://unix:/var/www/tracker_muslim/run/tracker_muslim.sock;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}
+```
+
+### 3. Set Up Socket Directory
+
+Create and configure the socket directory:
+
+```bash
+# Create socket directory
+sudo mkdir -p /var/www/tracker_muslim/run
+sudo chown -R your_username:www-data /var/www/tracker_muslim/run
+sudo chmod 775 /var/www/tracker_muslim/run
+```
+
+### 4. Enable and Start Services
+
+```bash
+# Test Nginx configuration
+sudo nginx -t
+
+# Enable services to start on boot
+sudo systemctl enable nginx
+sudo systemctl enable tracker_muslim
+
+# Start/restart services
+sudo systemctl restart tracker_muslim
+sudo systemctl restart nginx
+
+# Verify services are running
+sudo systemctl status tracker_muslim
+sudo systemctl status nginx
+```
+
+### 5. Troubleshooting
+
+If you encounter issues:
+
+```bash
+# Check Gunicorn logs
+sudo journalctl -u tracker_muslim -n 50
+
+# Check Nginx error logs
+sudo tail -f /var/log/nginx/error.log
+
+# Check permissions
+ls -la /var/www/tracker_muslim/run/
+
+# Verify socket file exists and has correct permissions
+ls -la /var/www/tracker_muslim/run/tracker_muslim.sock
+```
+
+Common issues and solutions:
+- Permission denied: Check user/group ownership and file permissions
+- Socket not found: Verify Gunicorn service is running and creating the socket
+- 502 Bad Gateway: Check Gunicorn logs for application errors
 
 ## Maintenance
 

@@ -1,0 +1,34 @@
+[Unit]
+Description=Gunicorn instance to serve Muslim Tracker application
+After=network.target
+
+[Service]
+User=adhinugroho
+Group=www-data
+WorkingDirectory=/var/www/tracker_muslim
+Environment="PATH=/var/www/tracker_muslim/venv/bin"
+# Reduced to 2 workers and added timeout for better resource management
+ExecStart=/var/www/tracker_muslim/venv/bin/gunicorn \
+    --workers 2 \
+    --threads 2 \
+    --worker-class=gthread \
+    --worker-tmp-dir=/dev/shm \
+    --timeout 30 \
+    --keep-alive 2 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --bind unix:/var/www/tracker_muslim/run/tracker_muslim.sock \
+    -m 007 \
+    app:app
+
+# Restart on failure
+Restart=always
+RestartSec=10
+
+# Basic resource limits
+TimeoutStopSec=5
+PrivateTmp=true
+LimitNOFILE=1024
+
+[Install]
+WantedBy=multi-user.target

@@ -2,612 +2,104 @@
 
 A web application to help track daily Islamic activities, designed for both mobile and desktop use. The application allows users to track their daily religious activities and maintain consistency in their practice.
 
-![Login Page](docs/images/login.png)
-![Dashboard](docs/images/dashboard.png)
-![Admin Users](docs/images/admin_users.png)
-
 ## Features
 
-- 📱 **Responsive Design**
-  - Mobile and desktop friendly interface
-  - Adaptive layout for different screen sizes
-  - Touch-friendly controls for mobile users
-
-- 🔐 **User Management**
-  - Secure user authentication
-  - Role-based access control (Admin/User)
-  - Password encryption using bcrypt
-  - User profile management
-
-- ✅ **Activity Tracking**
-  - Daily activity logging
-  - Automatic streak tracking
-  - Progress visualization
-  - Auto-save functionality
-
-- 📊 **Analytics & Reporting**
-  - Multiple view options (Daily/Weekly/Monthly/Yearly)
-  - Progress visualization through charts
-  - Activity completion statistics
-  - Streak tracking and records
+- 📱 **Responsive Design**: Mobile and desktop friendly interface
+- 🔐 **User Management**: Secure authentication with role-based access (Admin/User)
+- ✅ **Activity Tracking**: Daily activity logging with streak tracking
+- 📊 **Analytics**: View progress with daily/weekly/monthly/yearly statistics
 
 ## Tech Stack
 
-### Backend
-- **Framework**: Python Flask
-- **Database**: PostgreSQL 12+
-- **ORM**: SQLAlchemy
-- **Authentication**: Flask-Login
-- **Security**: Flask-Bcrypt
+- **Backend**: Python Flask, PostgreSQL, SQLAlchemy
+- **Frontend**: Bootstrap 5, Vanilla JS, Chart.js
+- **Server**: Nginx, Gunicorn
 
-### Frontend
-- **Framework**: Bootstrap 5
-- **JavaScript**: Vanilla JS
-- **Charts**: Chart.js
-- **Icons**: Bootstrap Icons
+## Local Development Setup
 
-## Installation
+1. **Prerequisites**
+   - Python 3.8+
+   - PostgreSQL 12+
+   - pip (Python package manager)
 
-### Prerequisites
-- Python 3.8+
-- PostgreSQL 12+
-- pip (Python package manager)
-- Git
+2. **Installation**
+   ```bash
+   # Clone repository
+   git clone https://github.com/adhinugroho1711/muslim_tracker_activity.git
+   cd muslim_tracker_activity
 
-### Setup Steps
+   # Create virtual environment
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-1. **Clone Repository**
+   # Install dependencies
+   pip install -r requirements.txt
+
+   # Setup environment
+   cp .env.example .env
+   # Edit .env with your database settings
+   ```
+
+3. **Run Application**
+   ```bash
+   # Initialize database
+   python reset_db.py
+
+   # Start development server
+   python app.py
+   ```
+
+## Production Deployment
+
+1. **Server Requirements**
+   - Ubuntu/Debian server
+   - Python 3.8+
+   - PostgreSQL 12+
+   - Nginx
+   - Gunicorn
+
+2. **Setup Steps**
+   ```bash
+   # Install system dependencies
+   sudo apt update
+   sudo apt install python3-venv python3-pip postgresql nginx
+
+   # Clone and setup application
+   cd /var/www
+   git clone https://github.com/adhinugroho1711/muslim_tracker_activity.git
+   cd muslim_tracker_activity
+
+   # Create virtual environment
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+
+   # Configure environment
+   cp .env.example .env
+   # Update .env with production settings
+   ```
+
+3. **Configure Services**
+   - Set up Gunicorn service
+   - Configure Nginx as reverse proxy
+   - Enable and start services
+
+## Maintenance
+
+Common maintenance commands:
 ```bash
-git clone https://github.com/adhinugroho1711/muslim_tracker_activity.git
-cd muslim_tracker_activity
-```
-
-2. **Virtual Environment**
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. **Dependencies**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Environment Configuration**
-```bash
-cp .env.example .env
-# Edit .env with your database credentials and settings
-```
-
-5. **SSL Configuration (Optional)**
-For secure database connections, you can configure SSL in your `.env` file:
-```env
-# SSL Configuration
-SSL_MODE=verify-full  # Options: disable, allow, prefer, require, verify-ca, verify-full
-SSL_CERT=/path/to/client-cert.pem
-SSL_KEY=/path/to/client-key.pem
-SSL_ROOT_CERT=/path/to/server-ca.pem
-```
-
-SSL modes:
-- `disable`: Only try a non-SSL connection
-- `allow`: First try a non-SSL connection; if that fails, try an SSL connection
-- `prefer`: First try an SSL connection; if that fails, try a non-SSL connection
-- `require`: Only try an SSL connection, but don't verify CA
-- `verify-ca`: Only try an SSL connection, and verify that the certificate is from a trusted CA
-- `verify-full`: Only try an SSL connection, verify the CA and verify the server hostname matches certificate
-
-6. **Database Initialization**
-```bash
-python reset_db.py
-```
-
-## VPS Deployment Guide
-
-### Prerequisites for VPS
-- Ubuntu Server 20.04 LTS or newer
-- Domain name pointing to your VPS IP
-- Root or sudo access to VPS
-
-### Server Setup
-
-1. **Update System**
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-
-2. **Install Required Packages**
-```bash
-sudo apt install -y python3-pip python3-venv nginx postgresql postgresql-contrib certbot python3-certbot-nginx
-```
-
-3. **Create Database**
-```bash
-sudo -u postgres psql
-CREATE DATABASE tracker_muslim;
-CREATE USER your_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE tracker_muslim TO your_user;
-\q
-```
-
-### Application Deployment
-
-1. **Create Application Directory**
-```bash
-sudo mkdir -p /var/www/tracker_muslim
-sudo chown $USER:$USER /var/www/tracker_muslim
-```
-
-2. **Clone Repository**
-```bash
-cd /var/www/tracker_muslim
-git clone https://github.com/adhinugroho1711/muslim_tracker_activity.git .
-```
-
-3. **Setup Virtual Environment**
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-pip install gunicorn  # For production server
-```
-
-4. **Configure Environment**
-```bash
-cp .env.example .env
-nano .env
-```
-
-Update with production settings:
-```env
-FLASK_ENV=production
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_HOST=localhost
-DB_NAME=tracker_muslim
-SECRET_KEY=your-secure-secret-key
-```
-
-5. **Setup Gunicorn Service**
-```bash
-sudo nano /etc/systemd/system/tracker_muslim.service
-```
-
-Add the following:
-```ini
-[Unit]
-Description=Tracker Muslim Gunicorn Service
-After=network.target
-
-[Service]
-User=your_username
-Group=www-data
-WorkingDirectory=/var/www/tracker_muslim
-Environment="PATH=/var/www/tracker_muslim/venv/bin"
-ExecStart=/var/www/tracker_muslim/venv/bin/gunicorn --workers 3 --bind unix:tracker_muslim.sock -m 007 app:app
-
-[Install]
-WantedBy=multi-user.target
-```
-
-6. **Configure Nginx**
-```bash
-sudo nano /etc/nginx/sites-available/tracker_muslim
-```
-
-Add the following:
-```nginx
-server {
-    server_name your-domain.com;
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/var/www/tracker_muslim/tracker_muslim.sock;
-    }
-
-    location /static {
-        alias /var/www/tracker_muslim/static;
-    }
-}
-```
-
-7. **Enable Site & Setup SSL**
-```bash
-sudo ln -s /etc/nginx/sites-available/tracker_muslim /etc/nginx/sites-enabled
-sudo nginx -t
-sudo systemctl restart nginx
-sudo certbot --nginx -d your-domain.com
-```
-
-8. **Start Application**
-```bash
-sudo systemctl start tracker_muslim
-sudo systemctl enable tracker_muslim
-```
-
-### Git Setup and Updates
-
-1. **Initialize Git Repository (if not done)**
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-```
-
-2. **Add Remote Repository**
-```bash
-git remote add origin https://github.com/adhinugroho1711/muslim_tracker_activity.git
-git branch -M main
-git push -u origin main
-```
-
-3. **Update Application**
-```bash
-cd /var/www/tracker_muslim
-git pull origin main
-source venv/bin/activate
-pip install -r requirements.txt
-sudo systemctl restart tracker_muslim
-```
-
-### Maintenance Commands
-
-- **View Application Logs**
-```bash
-sudo journalctl -u tracker_muslim
-```
-
-- **Check Service Status**
-```bash
+# Check service status
 sudo systemctl status tracker_muslim
+sudo systemctl status nginx
+
+# View logs
+sudo journalctl -u tracker_muslim
+sudo tail -f /var/log/nginx/error.log
+
+# Restart services
+sudo systemctl restart tracker_muslim nginx
 ```
-
-- **Restart Services**
-```bash
-sudo systemctl restart tracker_muslim
-sudo systemctl restart nginx
-```
-
-### Backup Database
-```bash
-pg_dump -U your_user tracker_muslim > backup_$(date +%Y%m%d).sql
-```
-
-### Security Recommendations
-
-1. **Configure Firewall**
-```bash
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw allow 22
-sudo ufw enable
-```
-
-2. **Regular Updates**
-```bash
-sudo apt update && sudo apt upgrade -y
-```
-
-3. **SSL Certificate Renewal**
-```bash
-sudo certbot renew
-```
-
-## Updating Application on VPS
-
-When you've pushed changes to the main branch, follow these steps to update your VPS:
-
-1. **SSH into your VPS**
-```bash
-ssh your_username@your_vps_ip
-```
-
-2. **Navigate to Application Directory**
-```bash
-cd /var/www/tracker_muslim/muslim_tracker_activity
-```
-
-3. **Pull Latest Changes**
-```bash
-git pull origin main
-```
-
-4. **Install Any New Dependencies**
-```bash
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-5. **Apply Database Migrations** (if any)
-```bash
-python reset_db.py  # Only if database schema has changed
-```
-
-6. **Restart Application Services**
-```bash
-sudo systemctl restart tracker_muslim  # Restart Gunicorn service
-sudo systemctl restart nginx           # Restart Nginx if needed
-```
-
-7. **Verify Application Status**
-```bash
-sudo systemctl status tracker_muslim   # Check if service is running
-sudo journalctl -u tracker_muslim      # Check logs for any errors
-```
-
-### Troubleshooting Update Issues
-
-If you encounter issues after updating:
-
-1. **Check Logs**
-```bash
-sudo journalctl -u tracker_muslim -n 50 --no-pager  # Last 50 log entries
-```
-
-2. **Verify File Permissions**
-```bash
-sudo chown -R www-data:www-data /var/www/tracker_muslim
-sudo chmod -R 755 /var/www/tracker_muslim
-```
-
-3. **Rollback if Needed**
-```bash
-git reset --hard HEAD@{1}  # Revert to previous commit
-sudo systemctl restart tracker_muslim
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection**
-   - Verify PostgreSQL is running
-   - Check database credentials in .env
-   - Ensure database exists
-
-2. **Login Issues**
-   - Clear browser cache
-   - Reset password if forgotten
-   - Contact admin for account issues
-
-3. **Data Not Saving**
-   - Check internet connection
-   - Verify user session is active
-   - Try refreshing the page
-
-### PostgreSQL Authentication
-
-If you encounter the error "password authentication failed for user postgres", follow these steps:
-
-1. **Switch to PostgreSQL User**
-```bash
-sudo -i -u postgres
-psql
-```
-
-2. **Set New Password**
-```sql
-ALTER USER postgres WITH PASSWORD 'your_secure_password';
-\q
-exit
-```
-
-3. **Update Authentication Method**
-```bash
-sudo nano /etc/postgresql/*/main/pg_hba.conf
-```
-
-Change this line:
-```
-local   all             postgres                                peer
-```
-To:
-```
-local   all             postgres                                md5
-```
-
-4. **Restart PostgreSQL**
-```bash
-sudo systemctl restart postgresql
-```
-
-5. **Update Environment File**
-```bash
-sudo nano .env
-```
-
-Update these lines:
-```env
-DB_USER=postgres
-DB_PASSWORD=your_secure_password
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=tracker_muslim
-```
-
-6. **Test Connection**
-```bash
-psql -U postgres -h localhost -d tracker_muslim
-```
-
-7. **Verify Application**
-```bash
-python app.py
-```
-
-## Configuration
-
-### Environment Variables
-
-```env
-# Database Configuration
-DB_USER=postgres
-DB_PASSWORD=your_password
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=tracker_muslim
-
-# Application Settings
-FLASK_ENV=development
-SECRET_KEY=your-secret-key
-DEBUG=True
-```
-
-### Environment Types
-
-- **Development** (`FLASK_ENV=development`)
-  - Debug mode enabled
-  - Detailed error messages
-  - Auto-reload on code changes
-
-- **Production** (`FLASK_ENV=production`)
-  - Optimized performance
-  - Minimal error details
-  - Cached templates
-
-- **Testing** (`FLASK_ENV=testing`)
-  - Separate test database
-  - Mock data generation
-  - Test-specific configurations
-
-## Using the Application
-
-### User Types
-
-1. **Admin Users**
-   - Full access to all features
-   - User management capabilities
-   - System configuration access
-   - Default credentials:
-     - Username: admin
-     - Password: admin123
-
-2. **Regular Users**
-   - Activity tracking
-   - Personal dashboard access
-   - Profile management
-   - Default credentials:
-     - Username: user
-     - Password: user123
-
-### Admin Panel
-
-The admin panel provides tools for:
-- User management (create, edit, deactivate)
-- Activity monitoring
-- System statistics
-- Database management
-
-### Activity Tracking
-
-1. **Adding Activities**
-   - Navigate to the main dashboard
-   - Click on activity cells to mark completion
-   - Activities are auto-saved
-   - Numeric inputs available for certain activities
-
-2. **Viewing Progress**
-   - Use the dashboard filters
-   - Check completion rates
-   - Monitor streaks
-   - View historical data
-
-## Reading the Dashboard
-
-The dashboard provides multiple views to help you track your activities:
-
-### View Types
-
-1. **Daily View**
-   - Shows today's activity completion
-   - Summary cards display:
-     - Today's overall completion rate
-     - Best streak achieved today
-     - Number of activities completed today
-     - Top performing activity
-   - Charts show:
-     - Individual activity completion rates for today
-     - Current streaks for each activity
-     - Heatmap showing today's activity pattern
-
-2. **Weekly View**
-   - Shows this week's activity completion (Monday-Sunday)
-   - Summary cards display:
-     - This week's overall completion rate
-     - Best streak achieved this week
-     - Total activities completed this week
-     - Top performing activity
-   - Charts show:
-     - Activity completion rates for the week
-     - Streak lengths for each activity
-     - Heatmap showing daily patterns for the week
-
-3. **Monthly View**
-   - Shows selected month's activity completion
-   - Summary cards display:
-     - Monthly overall completion rate
-     - Best streak achieved in the month
-     - Total activities completed this month
-     - Top performing activity for the month
-   - Charts show:
-     - Monthly completion rates per activity
-     - Streak lengths achieved in the month
-     - Heatmap showing daily patterns throughout the month
-
-4. **Yearly View**
-   - Shows selected year's activity completion
-   - Summary cards display:
-     - Yearly overall completion rate
-     - Best streak achieved in the year
-     - Total activities completed this year
-     - Top performing activity for the year
-   - Charts show:
-     - Yearly completion rates per activity
-     - Longest streaks achieved in the year
-     - Heatmap showing activity patterns throughout the year
-
-### Understanding the Charts
-
-1. **Completion Rate Chart**
-   - Bar chart showing completion percentage for each activity
-   - Higher bars indicate better completion rates
-   - Hover over bars to see exact percentages
-   - Color-coded for easy interpretation
-
-2. **Streak Chart**
-   - Bar chart showing current/best streaks for each activity
-   - Longer bars indicate longer streaks
-   - Hover over bars to see exact streak lengths
-   - Helps track consistency
-
-3. **Activity Heatmap**
-   - Calendar-style visualization of activity completion
-   - Darker colors indicate higher completion rates
-   - Hover over cells to see the date and completion rate
-   - Helps identify patterns and consistency in activities
-
-### Filtering and Navigation
-
-- Use the view type dropdown to switch between Daily/Weekly/Monthly/Yearly views
-- Use month/year selectors to navigate to different time periods
-- All charts and statistics update automatically when filters change
-- Data is cached for better performance
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Flask team for the excellent framework
-- Bootstrap team for the UI components
-- Chart.js team for visualization tools
-- All contributors who have helped with the project
+Contributions are welcome! Please feel free to submit a Pull Request.

@@ -584,15 +584,16 @@ def create_user():
             user.set_password(password)
             
             # Create default activities for the new user
+            today = datetime.now().date()
             activities = [
-                Activity(user=user, name='Sholat Subuh', description='Sholat Subuh tepat waktu'),
-                Activity(user=user, name='Sholat Dzuhur', description='Sholat Dzuhur tepat waktu'),
-                Activity(user=user, name='Sholat Ashar', description='Sholat Ashar tepat waktu'),
-                Activity(user=user, name='Sholat Maghrib', description='Sholat Maghrib tepat waktu'),
-                Activity(user=user, name='Sholat Isya', description='Sholat Isya tepat waktu'),
-                Activity(user=user, name='Membaca Al-Quran', description='Membaca Al-Quran minimal 1 halaman'),
-                Activity(user=user, name='Dzikir Pagi', description='Membaca dzikir pagi'),
-                Activity(user=user, name='Dzikir Petang', description='Membaca dzikir petang')
+                Activity(user=user, name='Sholat Subuh', date=today),
+                Activity(user=user, name='Sholat Dzuhur', date=today),
+                Activity(user=user, name='Sholat Ashar', date=today),
+                Activity(user=user, name='Sholat Maghrib', date=today),
+                Activity(user=user, name='Sholat Isya', date=today),
+                Activity(user=user, name='Membaca Al-Quran', date=today),
+                Activity(user=user, name='Dzikir Pagi', date=today),
+                Activity(user=user, name='Dzikir Petang', date=today)
             ]
             
             db.session.add(user)
